@@ -13,30 +13,38 @@ public class Gui
         public Color Color { get; set; }
         public bool IsVisible { get; set; } = true;
         public bool wasPressed { get; set; } = false;
+
+        public GuiComponent(Vector2 position, Color color, bool isVisible = true)
+        {
+            Position = position;
+            Color = color;
+            IsVisible = isVisible;
+        }
+
+        public GuiComponent()
+            : this(Vector2.Zero, Color.White) { }
+
         public abstract void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch);
 
-        /// <summary>
-        /// Checks if the button is pressed on said gui component but not if button is pressed first
-        /// So you must check if button is pressed first for peformance reasons
-        /// <summary>
         public abstract bool IsPressed(MouseState mouseState);
 
-        /// <summary>
-        /// Checks if the button is pressed on said gui component but not if button is pressed first
-        /// So you must check if button is pressed first for peformance reasons
-        /// <summary>
         public abstract bool IsReleased(MouseState mouseState);
 
-        /// <summary>
-        /// Checks if the button is pressed on said gui component but not if button is pressed first
-        /// So you must check if button is pressed first for peformance reasons
-        /// <summary>
         public abstract bool IsHovered(MouseState mouseState);
     }
 
     public class GuiRectangle : GuiComponent
     {
         public Vector2 Size { get; set; }
+
+        public GuiRectangle(Vector2 position, Vector2 size, Color color, bool isVisible = true)
+            : base(position, color, isVisible)
+        {
+            Size = size;
+        }
+
+        public GuiRectangle()
+            : this(Vector2.Zero, Vector2.One * 100, Color.White) { }
 
         public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
         {
@@ -53,9 +61,22 @@ public class Gui
 
         public override bool IsPressed(MouseState mouseState)
         {
-            wasPressed = mouseState.LeftButton == ButtonState.Pressed && IsHovered(mouseState);
-
-            return wasPressed;
+            // Only return true on the frame the button transitions from released to pressed
+            if (mouseState.LeftButton == ButtonState.Pressed && IsHovered(mouseState))
+            {
+                if (!wasPressed)
+                {
+                    wasPressed = true;
+                    return true;
+                }
+                // If already pressed, do not trigger again
+                return false;
+            }
+            else
+            {
+                wasPressed = false;
+                return false;
+            }
         }
 
         public override bool IsReleased(MouseState mouseState)
@@ -77,9 +98,42 @@ public class Gui
         }
     }
 
+    public class GuiRoundedRectangle : GuiRectangle
+    {
+        public float CornerRadius { get; set; }
+
+        public GuiRoundedRectangle(
+            Vector2 position,
+            Vector2 size,
+            float cornerRadius,
+            Color color,
+            bool isVisible = true
+        )
+            : base(position, size, color, isVisible)
+        {
+            CornerRadius = cornerRadius;
+        }
+
+        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        {
+            if (IsVisible)
+            {
+                PrimitiveBatch.RoundedRectangle primitiveRoundedRectangle =
+                    new PrimitiveBatch.RoundedRectangle(Position, Size, CornerRadius, Color);
+                primitiveRoundedRectangle.Draw(spriteBatch, primitiveBatch);
+            }
+        }
+    }
+
     public class GuiCircle : GuiComponent
     {
         public float Radius { get; set; }
+
+        public GuiCircle(Vector2 position, float radius, Color color, bool isVisible = true)
+            : base(position, color, isVisible)
+        {
+            Radius = radius;
+        }
 
         public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
         {
@@ -102,8 +156,8 @@ public class Gui
 
         public override bool IsPressed(MouseState mouseState)
         {
-            wasPressed = mouseState.LeftButton == ButtonState.Pressed && IsHovered(mouseState);
-            return wasPressed;
+            return wasPressed =
+                mouseState.LeftButton == ButtonState.Pressed && IsHovered(mouseState);
         }
 
         public override bool IsReleased(MouseState mouseState)
