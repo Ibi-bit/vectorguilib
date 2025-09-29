@@ -61,7 +61,6 @@ public class Gui
 
         public override bool IsPressed(MouseState mouseState)
         {
-            // Only return true on the frame the button transitions from released to pressed
             if (mouseState.LeftButton == ButtonState.Pressed && IsHovered(mouseState))
             {
                 if (!wasPressed)
@@ -69,7 +68,7 @@ public class Gui
                     wasPressed = true;
                     return true;
                 }
-                // If already pressed, do not trigger again
+                
                 return false;
             }
             else
@@ -169,5 +168,70 @@ public class Gui
             }
             return false;
         }
+    }
+    public class Slider 
+    {
+        public Vector2 Position { get; set; }
+        public float Min { get; set; }
+        public float Max { get; set; }
+        public float Value { get; set; }
+        public float Width { get; set; } = 200f;
+        public float Height { get; set; } = 20f;
+
+        public Color BackgroundColor { get; set; } = Color.Gray;
+        public Color FillColor { get; set; } = Color.Blue;
+        public Color HandleColor { get; set; } = Color.White;
+
+        public bool IsDragging { get; set; } = false;
+
+        public VectorGraphics.PrimitiveBatch.Rectangle BackgroundRectangle { get; set; }
+        public VectorGraphics.PrimitiveBatch.Rectangle FillRectangle { get; set; }
+        public GuiRectangle Handle { get; set; }
+
+
+        public Slider(Vector2 position, float min, float max, float initialValue, Color backgroundColor, Color fillColor, Color handleColor)
+        {
+            Position = position;
+            Min = min;
+            Max = max;
+            Value = initialValue;
+        }
+        public void Initialize()
+        {
+            BackgroundRectangle = new PrimitiveBatch.Rectangle(Position, new Vector2(Width, Height), BackgroundColor);
+            FillRectangle = new PrimitiveBatch.Rectangle(Position, new Vector2((Value - Min) / (Max - Min) * Width, Height), FillColor);
+            Handle = new GuiRectangle(new Vector2(Position.X + FillRectangle.size.X - Height / 2, Position.Y - (Height / 2)), new Vector2(Height, Height), HandleColor);
+        }
+
+        public void Update(MouseState mouseState)
+        {
+            if (IsDragging)
+            {
+                float mouseX = mouseState.X;
+                float clampedX = MathHelper.Clamp(mouseX, Position.X, Position.X + Width);
+                Value = Min + (clampedX - Position.X) / Width * (Max - Min);
+                FillRectangle.size = new Vector2((Value - Min) / (Max - Min) * Width, Height);
+                Handle.Position = new Vector2(Position.X + FillRectangle.size.X - Height / 2, Position.Y - (Height / 2));
+
+                if (mouseState.LeftButton == ButtonState.Released)
+                {
+                    IsDragging = false;
+                }
+            }
+            else if (Handle.IsPressed(mouseState))
+            {
+                IsDragging = true;
+            }
+        }
+        public bool IsHovered(MouseState mouseState)
+        {
+            return Handle.IsHovered(mouseState);
+        }
+
+        public void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        {
+            BackgroundRectangle.Draw(spriteBatch, primitiveBatch);
+            FillRectangle.Draw(spriteBatch, primitiveBatch);
+            Handle.Draw(spriteBatch, primitiveBatch);}
     }
 }
