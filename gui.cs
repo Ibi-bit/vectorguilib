@@ -200,7 +200,7 @@ public class Gui
         {
             BackgroundRectangle = new PrimitiveBatch.Rectangle(Position, new Vector2(Width, Height), BackgroundColor);
             FillRectangle = new PrimitiveBatch.Rectangle(Position, new Vector2((Value - Min) / (Max - Min) * Width, Height), FillColor);
-            Handle = new GuiRectangle(new Vector2(Position.X + FillRectangle.size.X - Height / 2, Position.Y - (Height / 2)), new Vector2(Height, Height), HandleColor);
+            Handle = new GuiRectangle(new Vector2(Position.X + FillRectangle.size.X - Height / 4, Position.Y), new Vector2(Height, Height), HandleColor);
         }
 
         public void Update(MouseState mouseState)
@@ -211,7 +211,7 @@ public class Gui
                 float clampedX = MathHelper.Clamp(mouseX, Position.X, Position.X + Width);
                 Value = Min + (clampedX - Position.X) / Width * (Max - Min);
                 FillRectangle.size = new Vector2((Value - Min) / (Max - Min) * Width, Height);
-                Handle.Position = new Vector2(Position.X + FillRectangle.size.X - Height / 2, Position.Y - (Height / 2));
+                Handle.Position = new Vector2(Position.X + FillRectangle.size.X - Height / 4, Position.Y);
 
                 if (mouseState.LeftButton == ButtonState.Released)
                 {
