@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -169,9 +170,8 @@ public class Gui
             return false;
         }
     }
-    public class Slider 
+    public class Slider : GuiComponent
     {
-        public Vector2 Position { get; set; }
         public float Min { get; set; }
         public float Max { get; set; }
         public float Value { get; set; }
@@ -188,13 +188,23 @@ public class Gui
         public VectorGraphics.PrimitiveBatch.Rectangle FillRectangle { get; set; }
         public GuiRectangle Handle { get; set; }
 
-
-        public Slider(Vector2 position, float min, float max, float initialValue, Color backgroundColor, Color fillColor, Color handleColor)
+        public Slider(
+            Vector2 position,
+            float min,
+            float max,
+            float initialValue,
+            Color backgroundColor,
+            Color fillColor,
+            Color handleColor
+        )
+            : base(position, backgroundColor)
         {
-            Position = position;
             Min = min;
             Max = max;
             Value = initialValue;
+            BackgroundColor = backgroundColor;
+            FillColor = fillColor;
+            HandleColor = handleColor;
         }
         public void Initialize()
         {
@@ -223,15 +233,88 @@ public class Gui
                 IsDragging = true;
             }
         }
-        public bool IsHovered(MouseState mouseState)
+
+        public override bool IsHovered(MouseState mouseState)
         {
             return Handle.IsHovered(mouseState);
         }
 
-        public void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        public override bool IsPressed(MouseState mouseState)
         {
-            BackgroundRectangle.Draw(spriteBatch, primitiveBatch);
-            FillRectangle.Draw(spriteBatch, primitiveBatch);
-            Handle.Draw(spriteBatch, primitiveBatch);}
+            return Handle.IsPressed(mouseState);
+        }
+
+        public override bool IsReleased(MouseState mouseState)
+        {
+            if (IsDragging && mouseState.LeftButton == ButtonState.Released)
+            {
+                IsDragging = false;
+                return true;
+            }
+            return false;
+        }
+
+        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        {
+            if (IsVisible)
+            {
+                BackgroundRectangle.Draw(spriteBatch, primitiveBatch);
+                FillRectangle.Draw(spriteBatch, primitiveBatch);
+                Handle.Draw(spriteBatch, primitiveBatch);
+            }
+        }
+    }
+
+    public class MenuWindow : GuiRectangle
+    {
+        public GuiComponent OpenComponent { get; set; }
+        
+        public List<GuiRectangle> components { get; set; } = new List<GuiRectangle>();
+        
+        public MenuWindow(Vector2 position, Vector2 size, Color color, bool isVisible = true)
+            : base(position, size, color, isVisible) { }
+        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch)
+        {
+            if (IsVisible)
+            {
+                base.Draw(spriteBatch, primitiveBatch);
+                if (OpenComponent != null)
+                {
+                    OpenComponent.Draw(spriteBatch, primitiveBatch);
+                }
+            }
+        }
+    }
+    public class DropDownMenu : MenuWindow
+    {
+        float OuterPadding = 10f;
+        float InnerPadding = 5f;
+        int NumberOfOptions;
+        Vector2 ButtonSize;
+        public DropDownMenu(Vector2 position, Vector2 size, Vector2 buttonSize, int numberOfItems, Color color, bool isVisible = true)
+            : base(position, size, color, isVisible)
+        {
+            NumberOfOptions = numberOfItems;
+            ButtonSize = buttonSize;
+        }
+        public void Initialize()
+        {
+            for (int i = 0; i < NumberOfOptions; i++)
+            {
+                float buttonHeight = ButtonSize.Y;
+                float buttonWidth = ButtonSize.X;
+                GuiRectangle option = new GuiRectangle(
+                    new Vector2(Position.X + OuterPadding, Position.Y + OuterPadding + i * (buttonHeight + InnerPadding)),
+                    new Vector2(buttonWidth, buttonHeight),
+                    Color.LightGray
+                );
+                components.Add(option);
+            }
+            if (components.Count > 0)
+            {
+                OpenComponent = components[0];
+            }
+        }
+
     }
 }
