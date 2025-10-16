@@ -37,6 +37,7 @@ public class Gui
     public class GuiRectangle : GuiComponent
     {
         public Vector2 Size { get; set; }
+        public Text Text { get; set; }
 
         public GuiRectangle(Vector2 position, Vector2 size, Color color, bool isVisible = true)
             : base(position, color, isVisible)
@@ -58,6 +59,26 @@ public class Gui
                 );
                 primitiveRectangle.Draw(spriteBatch, primitiveBatch);
             }
+        }
+        public override void Draw(SpriteBatch spriteBatch, PrimitiveBatch primitiveBatch, SpriteFont font)
+        {
+            if (IsVisible)
+            {
+                PrimitiveBatch.Rectangle primitiveRectangle = new PrimitiveBatch.Rectangle(
+                    Position,
+                    Size,
+                    Color
+                );
+                primitiveRectangle.Draw(spriteBatch, primitiveBatch);
+                if (Text != null)
+                {
+                    Vector2 textSize = font.MeasureString(Text.Content);
+                    Vector2 textPosition = new Vector2(
+                        Position.X + (Size.X - textSize.X) / 2,
+                        Position.Y + (Size.Y - textSize.Y) / 2
+                    );
+                    spriteBatch.DrawString(font, Text.Content, textPosition, Text.Color);
+                }
         }
 
         public override bool IsPressed(MouseState mouseState)
